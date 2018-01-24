@@ -32,17 +32,34 @@ task sourceJar(type: Jar) {
 }
 
 publishing.publications {
-        maven(MavenPublication) {
-            pom.packaging = "aar"
+    maven(MavenPublication) {
+        pom.packaging = "aar"
 
-            artifact ("${buildDir}/outputs/aar/${project.name}-release.aar")
-            artifact ("${buildDir}/intermediates/bundles/release/classes.jar")
+        artifact ("${buildDir}/outputs/aar/${project.name}-release.aar")
+        artifact ("${buildDir}/intermediates/bundles/release/classes.jar")
 
-            artifact sourceJar { classifier "sources" }
-            artifact javadocJar { classifier "javadoc" }
+        artifact sourceJar { classifier "sources" }
+        artifact javadocJar { classifier "javadoc" }
 
-            updatePom(pom, project);
-        }
+        updatePom(pom, project);
     }
+}
+
+String generatedResDir = 'build/generated-res/';
+
+//Ensure that the generated resource directory is created
+file('build/generated-res/raw').mkdirs()
+android.sourceSets.main.res.srcDirs += generatedResDir
+
+import armyc2.c2sd.xml.parser.BinaryGeneratorHelper
+
+task writeBinaryResources{
+    BinaryGeneratorHelper.generate(file('xmlResources'), file(generatedResDir + 'raw'))
+}
+
+afterEvaluate{
+    // Write the binary resources only if we are building an APK
+    tasks['preBuild'].dependsOn writeBinaryResources
+}
 
 
