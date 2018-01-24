@@ -4,6 +4,9 @@
  */
 package armyc2.c2sd.renderer.utilities;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+
 /**
  *
  * @author michael.spinelli
@@ -30,6 +33,10 @@ public class SinglePointLookupInfo {
                     _height = Integer.valueOf(height);
             if(width != null && width.equals("") == false)
                     _width = Integer.valueOf(width);
+    }
+
+    private SinglePointLookupInfo(){
+
     }
     
     public String getBasicSymbolID()
@@ -90,5 +97,16 @@ public class SinglePointLookupInfo {
     String xml = symbolId + mappingP + mappingA + description + width + height;
     return xml;
   }
-    
+
+    public static SinglePointLookupInfo readBinary(DataInputStream dis) throws IOException
+    {
+        SinglePointLookupInfo info = new SinglePointLookupInfo();
+        info._SymbolID = dis.readUTF();
+        info._Description = dis.readUTF();
+        info._mappingP = dis.readInt();
+        info._mappingA = dis.readInt();
+        info._height = dis.readInt();
+        info._width = dis.readInt();
+        return info;
+    }
 }

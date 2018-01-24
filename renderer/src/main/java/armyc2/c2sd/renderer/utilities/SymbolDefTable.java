@@ -9,10 +9,16 @@ package armyc2.c2sd.renderer.utilities;
  * import java.io.*; import java.util.HashMap; import java.util.Map;
  */
 
-import android.graphics.Typeface;
 import android.util.Log;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -72,104 +78,24 @@ public class SymbolDefTable
         return _instance;
     }
 
-    private String getXML(String xmlName)
-    {
-        String xmlFolder = "res/raw/";
-        String xml = null;
-        Typeface tf = null;
-        InputStream is = null;
-        try {
-            is = this.getClass().getClassLoader().getResourceAsStream(xmlFolder + xmlName);
-            if (is != null) {
-                InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader r = new BufferedReader(isr);
-                StringBuilder total = new StringBuilder();
-                String line;
-                while ((line = r.readLine()) != null) {
-                    total.append(line);
-                }
-                xml = total.toString();
-
-                // cleanup
-                r.close();
-                isr.close();
-                is.close();
-                r = null;
-                isr = null;
-                is = null;
-                total = null;
-            }
-        } catch (Exception exc) {
-            Log.e(TAG, exc.getMessage(), exc);
-        }
-        return xml;
-    }
-
     public final synchronized void init()
     {
         if (_initCalled == false) {
-            String[] xml = new String[2];
-            xml[0] = getXML("symbolconstantsb.xml");
-            xml[1] = getXML("symbolconstantsc.xml");
+            _SymbolDefinitionsB = new HashMap<>();
+            _SymbolDefDupsB = new ArrayList<>();
 
-            init(xml);
-        }
-    }
+            _SymbolDefinitionsC = new HashMap<>();
+            _SymbolDefDupsC = new ArrayList<>();
 
-    public final synchronized void init(String[] symbolConstantsXML)
-    {
-        if (_initCalled == false) {
-            _SymbolDefinitionsB = new HashMap<String, SymbolDef>();
-            _SymbolDefDupsB = new ArrayList<SymbolDef>();
-
-            _SymbolDefinitionsC = new HashMap<String, SymbolDef>();
-            _SymbolDefDupsC = new ArrayList<SymbolDef>();
-            String lookupXmlB = symbolConstantsXML[0];// FileHandler.InputStreamToString(xmlStreamB);
-            String lookupXmlC = symbolConstantsXML[1];
-            ;// FileHandler.InputStreamToString(xmlStreamC);
-            populateLookup(lookupXmlB, RendererSettings.Symbology_2525B);
-            populateLookup(lookupXmlC, RendererSettings.Symbology_2525C);
-            _initCalled = true;
-        }
-    }
-
-    private void populateLookup(String xml, int symStd)
-    {
-        Document document = XMLParser.getDomElement(xml);
-
-        SymbolDef sd = null;
-        NodeList symbols = XMLUtil.getItemList(document, "SYMBOL");
-        for (int i = 0; i < symbols.getLength(); i++) {
-            Node node = symbols.item(i);
-
-            String symbolID = XMLUtil.parseTagValue(node, "SYMBOLID");
-            String geometry = XMLUtil.parseTagValue(node, "GEOMETRY");
-            String drawCategory = XMLUtil.parseTagValue(node, "DRAWCATEGORY");
-            String maxpoints = XMLUtil.parseTagValue(node, "MAXPOINTS");
-            String minpoints = XMLUtil.parseTagValue(node, "MINPOINTS");
-            String modifiers = XMLUtil.parseTagValue(node, "MODIFIERS");
-            String description = XMLUtil.parseTagValue(node, "DESCRIPTION");
-            description = description.replaceAll("&amp;", "&");
-            String hierarchy = XMLUtil.parseTagValue(node, "HIERARCHY");
-            String path = XMLUtil.parseTagValue(node, "PATH");
-
-            sd = new SymbolDef(symbolID, description, Integer.valueOf(drawCategory), hierarchy,
-                    Integer.valueOf(minpoints), Integer.valueOf(maxpoints), modifiers, path);
-
-            boolean isMCSSpecific = SymbolUtilities.isMCSSpecificTacticalGraphic(sd);
-            if (symStd == RendererSettings.Symbology_2525B) {
-                if (_SymbolDefinitionsB.containsKey(symbolID) == false && isMCSSpecific == false) {
-                    _SymbolDefinitionsB.put(symbolID, sd);
-                } else if (isMCSSpecific == false) {
-                    _SymbolDefDupsB.add(sd);
-                }
-            } else if (symStd == RendererSettings.Symbology_2525C) {
-                if (_SymbolDefinitionsC.containsKey(symbolID) == false && isMCSSpecific == false) {
-                    _SymbolDefinitionsC.put(symbolID, sd);
-                } else if (isMCSSpecific == false) {
-                    _SymbolDefDupsC.add(sd);
-                }
+            try {
+                DataInputStream dis = new DataInputStream(new BufferedInputStream(this.getClass()
+                        .getClassLoader().getResourceAsStream("res/raw/symbolconstants.bin")));
+                readBinary(dis);
+                dis.close();
+            } catch (IOException e) {
+                Log.e("SymbolDefTable", "Could not load", e);
             }
+            _initCalled = true;
         }
     }
 
@@ -307,4 +233,30 @@ public class SymbolDefTable
         }
     }
 
+    private void readBinary(DataInputStream dis) throws IOException
+    {
+        int count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            SymbolDef def = SymbolDef.readBinary(dis);
+            _SymbolDefinitionsB.put(def._strBasicSymbolId, def);
+        }
+
+        count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            SymbolDef def = SymbolDef.readBinary(dis);
+            _SymbolDefDupsB.add(def);
+        }
+
+        count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            SymbolDef def = SymbolDef.readBinary(dis);
+            _SymbolDefinitionsC.put(def._strBasicSymbolId, def);
+        }
+
+        count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            SymbolDef def = SymbolDef.readBinary(dis);
+            _SymbolDefDupsC.add(def);
+        }
+    }
 }

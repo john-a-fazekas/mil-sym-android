@@ -5,6 +5,10 @@
 
 package armyc2.c2sd.renderer.utilities;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 /**
 *
 * @author michael.spinelli
@@ -114,6 +118,14 @@ public class UnitDef {
            return _path;
    }
 
+    static UnitDef readBinary(DataInputStream dis) throws IOException
+    {
+        String _basicSymbolId = dis.readUTF();
+        String _description = dis.readUTF();
+        int _drawCategory = dis.readInt();
+        String _hierarchy = dis.readUTF();
+        String _path = dis.readUTF();
 
-
+        return new UnitDef(_basicSymbolId, _description, _drawCategory, _hierarchy, _path);
+    }
 }

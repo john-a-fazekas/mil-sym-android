@@ -5,6 +5,9 @@
 
 package armyc2.c2sd.renderer.utilities;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+
 /**
 *
 * @author michael.spinelli
@@ -247,4 +250,21 @@ public class SymbolDef {
            return _strFullPath;
    }
 
+    public static SymbolDef readBinary(DataInputStream dis) throws IOException
+    {
+        String _strBasicSymbolId = dis.readUTF();
+        String _strDescription = dis.readUTF();
+        String _strSymbolType = dis.readUTF();
+        String _strGeometry = dis.readUTF();
+        String _strDrawCategory = dis.readUTF();
+        int _intDrawCategory = dis.readInt();
+        int _intMinPoints = dis.readInt();
+        int _intMaxPoints = dis.readInt();
+        String _strModifiers = dis.readUTF();
+        String _strHierarchy = dis.readUTF();
+        String _strFullPath = dis.readUTF();
+
+        return new SymbolDef(_strBasicSymbolId, _strDescription, _intDrawCategory, _strHierarchy,
+                _intMinPoints, _intMaxPoints, _strModifiers, _strFullPath);
+    }
 }
