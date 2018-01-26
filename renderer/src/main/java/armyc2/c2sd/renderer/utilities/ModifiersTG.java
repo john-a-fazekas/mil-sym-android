@@ -332,4 +332,53 @@ public class ModifiersTG {
 
         }
     }
+
+    /**
+     * go from "T" or "T1" to integer constant values 9 and 10
+     * @param modLetter
+     * @return
+     */
+    public static int getModifierKey(String modLetter) {
+        switch (modLetter) {
+            //case A_SYMBOL_ICON:
+            //    return "Symbol Icon";
+            case "B":
+                return B_ECHELON;
+            case "C":
+                return C_QUANTITY;
+            case "H":
+                return H_ADDITIONAL_INFO_1;
+            case "H1":
+                return H1_ADDITIONAL_INFO_2;
+            case "H2":
+                return H2_ADDITIONAL_INFO_3;
+            case "N":
+                return N_HOSTILE;
+            case "Q":
+                return Q_DIRECTION_OF_MOVEMENT;
+            case "S":
+                return S_OFFSET_INDICATOR;
+            case "T":
+                return T_UNIQUE_DESIGNATION_1;
+            case "T1":
+                return T1_UNIQUE_DESIGNATION_2;
+            case "V":
+                return V_EQUIP_TYPE;
+            case "W":
+                return W_DTG_1;
+            case "W1":
+                return W1_DTG_2;
+            case "X":
+                return X_ALTITUDE_DEPTH;
+            case "Y":
+                return Y_LOCATION;
+            case "AM":
+                return AM_DISTANCE;
+            case "AN":
+                return AN_AZIMUTH;
+            default:
+                return -1;
+
+        }
+    }
 }

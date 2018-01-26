@@ -27,6 +27,8 @@ import armyc2.c2sd.renderer.utilities.PathUtilties;
 import armyc2.c2sd.renderer.utilities.RectUtilities;
 import armyc2.c2sd.renderer.utilities.RendererSettings;
 import armyc2.c2sd.renderer.utilities.RendererUtilities;
+import armyc2.c2sd.renderer.utilities.SymbolDef;
+import armyc2.c2sd.renderer.utilities.SymbolDefTable;
 import armyc2.c2sd.renderer.utilities.SymbolUtilities;
 import armyc2.c2sd.renderer.utilities.TextInfo;
 import armyc2.c2sd.renderer.utilities.UnitFontLookup;
@@ -38,6 +40,7 @@ public class ModifierRenderer
     private static float _modifierFontHeight = 10f;
     private static float _modifierFontDescent = 2f;
     private static RendererSettings RS = RendererSettings.getInstance();
+    private static int tgTextModifierKeys[] = {2,3,4,5,6,9,10,11,12,13,14,15};
 
     public static void setModifierFont(Paint font, float height, float descent)
     {
@@ -3465,18 +3468,17 @@ public class ModifierRenderer
         }
         if (scheme == 'G')
         {
-            if (modifiers.indexOfKey(ModifiersTG.Q_DIRECTION_OF_MOVEMENT) >= 0)
-            {
-                if (modifiers.size() > 1)
-                {
-                    return true;
-                }
-            }
-            else if (modifiers.size() > 0)
-            {
-                return true;
-            }
+            String basic = SymbolUtilities.getBasicSymbolIDStrict(symbolID);
+            SymbolDef sd = SymbolDefTable.getInstance().getSymbolDef(basic, symStd);
+            String expr = "\\.";
+            String mods[] = sd.getModifiers().split(expr);
 
+            for(int lcv = 0; lcv < mods.length; lcv++)
+            {
+                if(modifiers.indexOfKey(ModifiersTG.getModifierKey(mods[lcv])) >= 0)
+                    return true;
+            }
+            return false;
         }
         else if (SymbolUtilities.isEMSNaturalEvent(symbolID) == false)
         {
