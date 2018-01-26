@@ -3290,7 +3290,7 @@ public class SymbolUtilities
         try
         {
             String basic = getBasicSymbolID(strSymbolID);
-            boolean blRetVal = (basic.substring(0, 8) == "G*G*GPUY");
+            boolean blRetVal = (basic.substring(0, 8).equals("G*G*GPUY"));
             return blRetVal;
         }
         catch (Throwable t)
