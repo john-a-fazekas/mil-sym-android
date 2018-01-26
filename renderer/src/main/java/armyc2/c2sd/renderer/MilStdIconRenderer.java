@@ -1,12 +1,8 @@
 package armyc2.c2sd.renderer;
 
-import android.graphics.Typeface;
 import android.util.Log;
 import android.util.SparseArray;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 
@@ -45,27 +41,11 @@ public class MilStdIconRenderer
                 // setup fonts
                 FontManager.getInstance().init(cacheDir);
 
-                // get xml
-                String unitcontantsb = getXML("unitconstantsb.xml");
-                String unitconstantsc = getXML("unitconstantsc.xml");
-                String symbolconstantsb = getXML("symbolconstantsb.xml");
-                String singlepointmappingsb = getXML("singlepointb.xml");
-                String symbolconstantsc = getXML("symbolconstantsc.xml");
-                String singlepointmappingsc = getXML("singlepointc.xml");
-                String tacticalgraphics = getXML("tacticalgraphics.xml");
-                String unitfontmappingsb = getXML("unitfontmappingsb.xml");
-                String unitfontmappingsc = getXML("unitfontmappingsc.xml");
-
-                String[] unitConstants = { unitcontantsb, unitconstantsc };
-                String[] unitMappings = { unitfontmappingsb, unitfontmappingsc };
-                String[] symbolConstants = { symbolconstantsb, symbolconstantsc };
-                String[] symbolMappings = { singlepointmappingsb, singlepointmappingsc };
-
-                UnitDefTable.getInstance().init(unitConstants);
-                UnitFontLookup.getInstance().init(unitMappings);
-                SymbolDefTable.getInstance().init(symbolConstants);
-                SinglePointLookup.getInstance().init(symbolMappings);// */
-                TacticalGraphicLookup.getInstance().init(tacticalgraphics);
+                UnitDefTable.getInstance().init();
+                UnitFontLookup.getInstance().init();
+                SymbolDefTable.getInstance().init();
+                SinglePointLookup.getInstance().init();
+                TacticalGraphicLookup.getInstance().init();
 
                 // PROTOTYPE SVG////////////////////////////////////////
                 // works, but half speed
@@ -90,39 +70,6 @@ public class MilStdIconRenderer
     public synchronized boolean isReady()
     {
         return _initSucces.get();
-    }
-
-    private String getXML(String xmlName)
-    {
-        String xmlFolder = "res/raw/";
-        String xml = null;
-        Typeface tf = null;
-        InputStream is = null;
-        try {
-            is = this.getClass().getClassLoader().getResourceAsStream(xmlFolder + xmlName);
-            if (is != null) {
-                InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader r = new BufferedReader(isr);
-                StringBuilder total = new StringBuilder();
-                String line;
-                while ((line = r.readLine()) != null) {
-                    total.append(line);
-                }
-                xml = total.toString();
-
-                // cleanup
-                r.close();
-                isr.close();
-                is.close();
-                r = null;
-                isr = null;
-                is = null;
-                total = null;
-            }
-        } catch (Exception exc) {
-            Log.e(TAG, exc.getMessage(), exc);
-        }
-        return xml;
     }
 
     // @Override

@@ -4,19 +4,14 @@
 
 package armyc2.c2sd.renderer.utilities;
 
-import android.graphics.Typeface;
 import android.util.Log;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  *
@@ -36,14 +31,6 @@ public class UnitDefTable
 
     private String TAG = "UnitDefTable";
 
-    private static String propSymbolID = "SYMBOLID";
-    private static String propDrawCategory = "DRAWCATEGORY";
-    private static String propModifiers = "MODIFIERS";
-    private static String propDescription = "DESCRIPTION";
-    private static String propHierarchy = "HIERARCHY";
-    private static String propAlphaHierarchy = "ALPHAHIERARCHY";
-    private static String propPath = "PATH";
-
     private UnitDefTable()
     {
 
@@ -62,116 +49,28 @@ public class UnitDefTable
      * if(foo.getHierarchy().equalsIgnoreCase(hierarchy)) { return } } }
      */
 
-    private String getXML(String xmlName)
+    public synchronized void init()
     {
-        String xmlFolder = "res/raw/";
-        String xml = null;
-        Typeface tf = null;
-        InputStream is = null;
-        try {
-            is = this.getClass().getClassLoader().getResourceAsStream(xmlFolder + xmlName);
-            if (is != null) {
-                InputStreamReader isr = new InputStreamReader(is);
-                BufferedReader r = new BufferedReader(isr);
-                StringBuilder total = new StringBuilder();
-                String line;
-                while ((line = r.readLine()) != null) {
-                    total.append(line);
-                }
-                xml = total.toString();
+        if (_initCalled == false) {
 
-                // cleanup
-                r.close();
-                isr.close();
-                is.close();
-                r = null;
-                isr = null;
-                is = null;
-                total = null;
+            _UnitDefinitionsB = new HashMap<>();
+            _UnitDefDupsB = new ArrayList<>();
+
+            _UnitDefinitionsC = new HashMap<>();
+            _UnitDefDupsC = new ArrayList<>();
+
+            try {
+                DataInputStream dis = new DataInputStream(new BufferedInputStream(getClass().getClassLoader
+                        ().getResourceAsStream("res/raw/unitconstants.bin")));
+                readBinary(dis);
+                dis.close();
+            } catch (IOException e) {
+                Log.e("UnitDefTable", "Could not load", e);
             }
-        } catch (Exception exc) {
-            Log.e(TAG, exc.getMessage(), exc);
-        }
-        return xml;
-    }
-
-    public final synchronized void init()
-    {
-        if (_initCalled == false) {
-            String[] xml = new String[2];
-            xml[0] = getXML("unitconstantsb.xml");
-            xml[1] = getXML("unitconstantsc.xml");
-
-            init(xml);
-        }
-    }
-
-    /**
-     * must be called first
-     */
-    public synchronized void init(String[] unitConstantsXML)
-    {
-        if (_initCalled == false) {
-
-            _UnitDefinitionsB = new HashMap<String, UnitDef>();
-            _UnitDefDupsB = new ArrayList<UnitDef>();
-
-            _UnitDefinitionsC = new HashMap<String, UnitDef>();
-            _UnitDefDupsC = new ArrayList<UnitDef>();
-
-            String lookupXmlB = unitConstantsXML[0];// FileHandler.InputStreamToString(xmlStreamB);
-            String lookupXmlC = unitConstantsXML[1];
-            // FileHandler.InputStreamToString(xmlStreamC);
-            // String lookupXml = FileHandler.fileToString("C:\\UnitFontMappings.xml");
-            populateLookup(lookupXmlB, RendererSettings.Symbology_2525B);
-            populateLookup(lookupXmlC, RendererSettings.Symbology_2525C);
 
             _initCalled = true;
         }
     }
-
-    private static void populateLookup(String xml, int symStd)
-    {
-        UnitDef ud = null;
-
-        Document document = XMLParser.getDomElement(xml);
-
-        NodeList symbols = XMLUtil.getItemList(document, "SYMBOL");
-        for (int i = 0; i < symbols.getLength(); i++) {
-            Node node = symbols.item(i);
-
-            String symbolID = XMLUtil.parseTagValue(node, "SYMBOLID");
-            String description = XMLUtil.parseTagValue(node, "DESCRIPTION");
-            description = description.replaceAll("&amp;", "&");
-            String drawCategory = XMLUtil.parseTagValue(node, "DRAWCATEGORY");
-            String hierarchy = XMLUtil.parseTagValue(node, "HIERARCHY");
-            String alphaHierarchy = XMLUtil.parseTagValue(node, "ALPHAHIERARCHY");
-            String path = XMLUtil.parseTagValue(node, "PATH");
-
-            if (SymbolUtilities.isInstallation(symbolID))
-                symbolID = symbolID.substring(0, 10) + "H****";
-
-            int idc = 0;
-            if (drawCategory != null || drawCategory.equals("") == false)
-                idc = Integer.valueOf(drawCategory);
-
-            ud = new UnitDef(symbolID, description, idc, hierarchy, path);
-
-            boolean isMCSSpecificFE = SymbolUtilities.isMCSSpecificForceElement(ud);
-
-            if (symStd == RendererSettings.Symbology_2525B) {
-                if (_UnitDefinitionsB.containsKey(symbolID) == false && isMCSSpecificFE == false)
-                    _UnitDefinitionsB.put(symbolID, ud);// EMS have dupe symbols with same code
-                else if (isMCSSpecificFE == false)
-                    _UnitDefDupsB.add(ud);
-            } else {
-                if (_UnitDefinitionsC.containsKey(symbolID) == false && isMCSSpecificFE == false)
-                    _UnitDefinitionsC.put(symbolID, ud);// EMS have dupe symbols with same code
-                else if (isMCSSpecificFE == false)
-                    _UnitDefDupsC.add(ud);
-            }
-        }
-    }// end populateLookup
 
     /**
      * @name getSymbolDef
@@ -243,4 +142,30 @@ public class UnitDefTable
             return false;
     }
 
+    private void readBinary(DataInputStream dis) throws IOException
+    {
+        int count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            UnitDef def = UnitDef.readBinary(dis);
+            _UnitDefinitionsB.put(def.getBasicSymbolId(), def);
+        }
+
+        count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            UnitDef def = UnitDef.readBinary(dis);
+            _UnitDefDupsB.add(def);
+        }
+
+        count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            UnitDef def = UnitDef.readBinary(dis);
+            _UnitDefinitionsC.put(def.getBasicSymbolId(), def);
+        }
+
+        count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            UnitDef def = UnitDef.readBinary(dis);
+            _UnitDefDupsC.add(def);
+        }
+    }
 }

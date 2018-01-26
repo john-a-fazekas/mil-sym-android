@@ -6,12 +6,11 @@ package armyc2.c2sd.renderer.utilities;
 
 import android.util.Log;
 
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.logging.Level;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  *
@@ -91,80 +90,22 @@ public class UnitFontLookup
         return _instance;
     }
 
-    public synchronized void init(String[] unitFontMappingsStream)
+    public synchronized void init()
     {
         if (_initCalled == false) {
             _instance = new UnitFontLookup();
-            String lookupXmlB = unitFontMappingsStream[0];// FileHandler.InputStreamToString(xmlStreamB);
-            String lookupXmlC = unitFontMappingsStream[1];// FileHandler.InputStreamToString(xmlStreamC);
 
-            populateLookup(lookupXmlB, RendererSettings.Symbology_2525B);
-            populateLookup(lookupXmlC, RendererSettings.Symbology_2525C);
+            try {
+                DataInputStream dis = new DataInputStream(new BufferedInputStream(getClass().getClassLoader
+                        ().getResourceAsStream("res/raw/unitfontmappings.bin")));
+                readBinary(dis);
+                dis.close();
+            } catch (IOException e) {
+                Log.e("UnitFontLookup", "Could not load", e);
+            }
 
             _initCalled = true;
         }
-    }
-
-    private static void populateLookup(String xml, int SymbologyStandard)
-    {
-        Document document = XMLParser.getDomElement(xml);
-
-        NodeList symbols = XMLUtil.getItemList(document, "SYMBOL");
-        for (int i = 0; i < symbols.getLength(); i++) {
-            Node node = symbols.item(i);
-
-            String ID = XMLUtil.parseTagValue(node, "SYMBOLID");
-            String description = XMLUtil.parseTagValue(node, "DESCRIPTION");
-            String m1u = XMLUtil.parseTagValue(node, "MAPPING1U");
-            String m1f = XMLUtil.parseTagValue(node, "MAPPING1F");
-            String m1n = XMLUtil.parseTagValue(node, "MAPPING1N");
-            String m1h = XMLUtil.parseTagValue(node, "MAPPING1H");
-            String m2 = XMLUtil.parseTagValue(node, "MAPPING2");
-            String c1 = XMLUtil.parseTagValue(node, "MAPPING1COLOR");
-            String c2 = XMLUtil.parseTagValue(node, "MAPPING2COLOR");
-
-            UnitFontLookupInfo uflTemp = null;
-
-            // Check for bad font locations and remap
-            m1u = checkMappingIndex(m1u);
-            m1f = checkMappingIndex(m1f);
-            m1n = checkMappingIndex(m1n);
-            m1h = checkMappingIndex(m1h);
-            m2 = checkMappingIndex(m2);
-            ////////////////////////////////////////
-
-            uflTemp = new UnitFontLookupInfo(ID, description, m1u, m1f, m1n, m1h, c1, m2, c2);
-
-            if (uflTemp != null) {
-                if (SymbologyStandard == RendererSettings.Symbology_2525B)
-                    hashMapB.put(ID, uflTemp);
-                else if (SymbologyStandard == RendererSettings.Symbology_2525C)
-                    hashMapC.put(ID, uflTemp);
-            }
-        }
-    }
-
-    /**
-     * Until XML files are updated, we need to shift the index
-     * 
-     * @param index
-     * @return
-     */
-    private static String checkMappingIndex(String index)
-    {
-        int i = -1;
-        if (SymbolUtilities.isNumber(index)) {
-            i = Integer.valueOf(index);
-
-            if (i < 9000)
-                return String.valueOf(i + 57000);
-            else
-                return String.valueOf(i + 54000);
-
-        }
-
-        return index;// */
-
     }
 
     /**
@@ -868,4 +809,19 @@ public class UnitFontLookup
      * public static void main(String args[]) { int mapping =
      * UnitFontLookup.instance().getCharCodeFromSymbol("G*FPPTN---****X"); String junk = ""; }
      */
+
+    private void readBinary(DataInputStream dis) throws IOException
+    {
+        int count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            UnitFontLookupInfo def = UnitFontLookupInfo.readBinary(dis);
+            hashMapB.put(def._SymbolID, def);
+        }
+
+        count = dis.readInt();
+        for (int i = 0; i < count; i++) {
+            UnitFontLookupInfo def = UnitFontLookupInfo.readBinary(dis);
+            hashMapC.put(def._SymbolID, def);
+        }
+    }
 }

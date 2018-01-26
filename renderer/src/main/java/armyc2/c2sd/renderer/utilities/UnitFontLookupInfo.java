@@ -20,6 +20,10 @@ package armyc2.c2sd.renderer.utilities;
   <MAPPING2COLOR/>
 </SYMBOL>
 */
+
+import java.io.DataInputStream;
+import java.io.IOException;
+
 /**
  *
  * @author Michael.Spinelli
@@ -80,6 +84,10 @@ public class UnitFontLookupInfo {
         _color2 = SymbolUtilities.getColorFromHexString(Color2);
     }
 
+    private UnitFontLookupInfo(){
+
+    }
+
     public String getBasicSymbolID()
     {
         return _SymbolID;
@@ -131,4 +139,24 @@ public class UnitFontLookupInfo {
         return _color2;
     }
 
+    public static UnitFontLookupInfo readBinary(DataInputStream dis) throws IOException
+    {
+        UnitFontLookupInfo info = new UnitFontLookupInfo();
+        info._SymbolID = dis.readUTF();
+        info._Description = dis.readUTF();
+        info._mapping1 = dis.readInt();
+        info._mapping1U = dis.readInt();
+        info._mapping1F = dis.readInt();
+        info._mapping1N = dis.readInt();
+        info._mapping1H = dis.readInt();
+        info._mapping2 = dis.readInt();
+
+        if(dis.readBoolean()) {
+            info._color1 = SymbolUtilities.getColorFromHexString(dis.readUTF());
+        }
+        if(dis.readBoolean()) {
+            info._color2 = SymbolUtilities.getColorFromHexString(dis.readUTF());
+        }
+        return info;
+    }
 }

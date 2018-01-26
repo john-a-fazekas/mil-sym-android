@@ -1,0 +1,8 @@
+dependencies {
+    compile localGroovy()
+    compile gradleApi()
+}
+
+repositories {
+    jcenter()
+}

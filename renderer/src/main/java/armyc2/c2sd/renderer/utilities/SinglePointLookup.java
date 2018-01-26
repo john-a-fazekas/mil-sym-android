@@ -4,13 +4,14 @@
 
 package armyc2.c2sd.renderer.utilities;
 
+import android.util.Log;
+
+import java.io.BufferedInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
  * responsible for character index lookups for single point.
@@ -51,82 +52,23 @@ public class SinglePointLookup
         return _instance;
     }
 
-    /**
-     * @name init
-     *
-     * @desc Simply calls xmlLoaded
-     *
-     * @return None
-     */
-    public synchronized void init(String[] singlepointLookupXML)
+    public synchronized void init()
     {
 
         if (_initCalled == false) {
             _instance = new SinglePointLookup();
-            hashMapB = new HashMap<String, SinglePointLookupInfo>();
-            hashMapC = new HashMap<String, SinglePointLookupInfo>();
 
-            String lookupXmlB = singlepointLookupXML[0];// FileHandler.InputStreamToString(xmlStreamB);
-            String lookupXmlC = singlepointLookupXML[1];// FileHandler.InputStreamToString(xmlStreamC);
+            try {
+                DataInputStream dis = new DataInputStream(new BufferedInputStream(getClass().getClassLoader
+                        ().getResourceAsStream("res/raw/singlepoint.bin")));
+                readBinary(dis);
+                dis.close();
+            } catch (IOException e) {
+                Log.e("SinglePointLookup", "Could not load", e);
+            }
 
-            populateLookup(lookupXmlB, RendererSettings.Symbology_2525B);
-            populateLookup(lookupXmlC, RendererSettings.Symbology_2525C);
             _initCalled = true;
         }
-    }
-
-    /**
-     * @name populateLookup
-     *
-     * @desc
-     *
-     * @param xml - IN -
-     * @return None
-     */
-    private static void populateLookup(String xml, int symStd)
-    {
-        Document document = XMLParser.getDomElement(xml);
-
-        NodeList symbols = XMLUtil.getItemList(document, "SYMBOL");
-        for (int i = 0; i < symbols.getLength(); i++) {
-            Node node = symbols.item(i);
-
-            SinglePointLookupInfo spli = null;
-            String basicID = XMLUtil.parseTagValue(node, "SYMBOLID");
-            String description = XMLUtil.parseTagValue(node, "DESCRIPTION");
-            String mappingP = XMLUtil.parseTagValue(node, "MAPPINGP");
-            String mappingA = XMLUtil.parseTagValue(node, "MAPPINGA");
-            String width = XMLUtil.parseTagValue(node, "WIDTH");
-            String height = XMLUtil.parseTagValue(node, "HEIGHT");
-
-            mappingP = checkMappingIndex(mappingP);
-            mappingA = checkMappingIndex(mappingA);
-
-            spli = new SinglePointLookupInfo(basicID, description, mappingP, mappingA, width, height);
-
-            if (symStd == RendererSettings.Symbology_2525B)
-                hashMapB.put(basicID, spli);
-            else if (symStd == RendererSettings.Symbology_2525C)
-                hashMapC.put(basicID, spli);
-
-        }
-    }
-
-    /**
-     * Until XML files are updated, we need to shift the index
-     * 
-     * @param index
-     * @return
-     */
-    private static String checkMappingIndex(String index)
-    {
-        int i = -1;
-        if (SymbolUtilities.isNumber(index)) {
-            i = Integer.valueOf(index);
-
-            return String.valueOf(i + 57000);
-        }
-        return index;
     }
 
     /**
@@ -213,4 +155,22 @@ public class SinglePointLookup
      * SinglePointLookup.instance().getSPSymbolDef("G*FPPTC---****X"); int mapping =
      * SinglePointLookup.instance().getCharCodeFromSymbol("G*FPPTC---****X"); String junk = ""; }
      */
+
+    private void readBinary(DataInputStream dis) throws IOException
+    {
+        int count = dis.readInt();
+        hashMapB = new HashMap<>(count);
+
+        for (int i = 0; i < count; i++) {
+            SinglePointLookupInfo def = SinglePointLookupInfo.readBinary(dis);
+            hashMapB.put(def.getBasicSymbolID(), def);
+        }
+
+        count = dis.readInt();
+        hashMapC = new HashMap<>(count);
+        for (int i = 0; i < count; i++) {
+            SinglePointLookupInfo def = SinglePointLookupInfo.readBinary(dis);
+            hashMapC.put(def.getBasicSymbolID(), def);
+        }
+    }
 }
