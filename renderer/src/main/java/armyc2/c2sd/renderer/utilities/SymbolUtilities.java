@@ -2966,9 +2966,10 @@ public class SymbolUtilities
     {
         try
         {
-            boolean blRetVal = ((strSymbolID.charAt(0) == 'S')
+            boolean blRetVal = (((strSymbolID.charAt(0) == 'S')
                     && (strSymbolID.charAt(2) == 'G')
-                    && (strSymbolID.charAt(4) == 'U'));
+                    && (strSymbolID.charAt(4) == 'U')) ||
+                    isSOF(strSymbolID));
             return blRetVal;
         }
         catch (Throwable t)
