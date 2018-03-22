@@ -48,6 +48,7 @@ public class Modifier2 {
     private static final int area = 3;   //use one point
     private static final int screen = 4;   //use one point, screen, cover, guard points
     private static final int aboveEnd = 5;   //rev D mod to replace toEnd
+    private static final int aboveMiddlePerpendicular = 6; //use both points
     private static double fillAlphaCanObscureText = 50d;
 
     private static boolean DoublesBack(POINT2 pt0, POINT2 pt1, POINT2 pt2) {
@@ -3973,7 +3974,7 @@ public class Modifier2 {
                         pt0 = tg.Pixels.get(1);
                         pt1 = tg.Pixels.get(2);
                         //pt1=lineutility.ExtendAlongLineDouble(pt1, pt0, -10);
-                        AddIntegralAreaModifier(tg, label, aboveMiddle, -0.125 * csFactor, pt0, pt1, true);
+                        AddIntegralAreaModifier(tg, label, aboveMiddlePerpendicular, -0.125 * csFactor, pt0, pt1, true);
                         break;
                     case TacticalLines.PENETRATE:
                     case TacticalLines.CLEAR:
@@ -4884,6 +4885,7 @@ public class Modifier2 {
                         modifierPosition = new Point2D.Double(pt3.x, pt3.y);
                         break;
                     case aboveMiddle:
+                    case aboveMiddlePerpendicular:
                         pt2 = midPt;
                         if (tg.get_Client().equals("2D")) {
                             lineFactor += 0.5;
@@ -4909,6 +4911,19 @@ public class Modifier2 {
                         glyphPosition = new Point((int) pt3.x, (int) pt3.y);
                         justify = ShapeInfo.justify_center;
                         modifierPosition = new Point2D.Double(midPt.x, midPt.y);
+
+                        if(modifier.type == aboveMiddlePerpendicular) {
+                            // Need to negate the original rotation
+                            if (x1 > x2) {
+                                theta += Math.PI;
+                            }
+                            // Adjust the label rotation based on the y values
+                            if (y1 > y2) {
+                                theta += Math.PI;
+                            }
+                            // Rotate by 90 degrees. This is how we rotate the label perpendicular to the line
+                            theta -= Math.PI / 2;
+                        }
                         break;
                     case area:
                         theta = 0;
