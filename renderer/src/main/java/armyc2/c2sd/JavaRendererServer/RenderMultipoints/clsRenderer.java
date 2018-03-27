@@ -3,33 +3,22 @@
  */
 package armyc2.c2sd.JavaRendererServer.RenderMultipoints;
 
-import armyc2.c2sd.renderer.utilities.IPointConversion;
-import armyc2.c2sd.renderer.utilities.ShapeInfo;
-import armyc2.c2sd.renderer.utilities.MilStdSymbol;
-import armyc2.c2sd.renderer.utilities.ErrorLogger;
-import armyc2.c2sd.renderer.utilities.RendererException;
-import armyc2.c2sd.renderer.utilities.ModifiersTG;
-import armyc2.c2sd.JavaLineArray.arraysupport;
+import armyc2.c2sd.renderer.utilities.*;
 import armyc2.c2sd.JavaLineArray.CELineArray;
-import armyc2.c2sd.JavaLineArray.Channels;
 import armyc2.c2sd.JavaLineArray.POINT2;
-import armyc2.c2sd.JavaLineArray.ref;
+
 import java.util.ArrayList;
 import armyc2.c2sd.JavaLineArray.Shape2;
 import armyc2.c2sd.JavaLineArray.TacticalLines;
 import armyc2.c2sd.JavaLineArray.lineutility;
 import armyc2.c2sd.JavaTacticalRenderer.TGLight;
 import armyc2.c2sd.JavaTacticalRenderer.Modifier2;
-import armyc2.c2sd.JavaTacticalRenderer.clsChannelUtility;
 import armyc2.c2sd.JavaTacticalRenderer.clsMETOC;
-import armyc2.c2sd.JavaTacticalRenderer.P1;
 import armyc2.c2sd.JavaTacticalRenderer.mdlGeodesic;
 //import armyc2.c2sd.JavaTacticalRenderer.clsUtility;
-import armyc2.c2sd.renderer.utilities.Color;
 import armyc2.c2sd.graphics2d.*;
 import android.content.Context;
 import android.util.SparseArray;
-import armyc2.c2sd.renderer.utilities.RendererSettings;
 
 /**
  * Rendering class
@@ -39,7 +28,6 @@ import armyc2.c2sd.renderer.utilities.RendererSettings;
 public final class clsRenderer {
 
     private static final String _className = "clsRenderer";
-    private static double feetPerMeter = 3.28084;
 
     /**
      * Set tg geo points from the client points
@@ -249,6 +237,15 @@ public final class clsRenderer {
             if (altitudeLabel == null || altitudeLabel.isEmpty()) {
                 altitudeLabel = "MSL";
             }
+            String altitudeUnit = milStd.getAltitudeUnit();
+            if(altitudeUnit == null){
+                altitudeUnit = "ft.";
+            }
+            DistanceUnit distanceUnit = milStd.getDistanceUnit();
+            if(distanceUnit == null){
+                distanceUnit = DistanceUnit.METERS;
+            }
+
             double x_alt = 0;
             int n_alt = 0;
             String strXAlt = "";
@@ -350,13 +347,13 @@ public final class clsRenderer {
                     String strH1 = "";
                     for (int j = 0; j < X.size(); j++) {
                         //strH1 += Double.toString(X.get(j));
-                        x_alt = X.get(j) * feetPerMeter;
+                        x_alt = X.get(j);
                         //strXAlt=Double.toString(x_alt)+" ft. "+altitudeLabel;
                         x_alt *= 10.0;
                         x_alt = Math.round(x_alt);
                         n_alt = (int) x_alt;
                         x_alt = n_alt / 10.0;
-                        strXAlt = Double.toString(x_alt) + " ft. " + altitudeLabel;
+                        strXAlt = createAltitudeLabel(x_alt, altitudeUnit, altitudeLabel);
                         strH1 += strXAlt;
 
                         if (j < X.size() - 1) {
@@ -494,24 +491,24 @@ public final class clsRenderer {
                     ArrayList<Double> X = milStd.getModifiers_AM_AN_X(ModifiersTG.X_ALTITUDE_DEPTH);
                     if (X != null && X.size() > 0) {
                         //tg.set_H(Double.toString(X.get(0)));
-                        x_alt = X.get(0) * feetPerMeter;
+                        x_alt = X.get(0);
                         //strXAlt=Double.toString(x_alt)+" ft. "+altitudeLabel;
                         x_alt *= 10.0;
                         x_alt = Math.round(x_alt);
                         n_alt = (int) x_alt;
                         x_alt = n_alt / 10.0;
-                        strXAlt = Double.toString(x_alt) + " ft. " + altitudeLabel;
+                        strXAlt = createAltitudeLabel(x_alt, altitudeUnit, altitudeLabel);
                         tg.set_H(strXAlt);
                     }
                     if (X != null && X.size() > 1) {
                         //tg.set_H1(Double.toString(X.get(1)));
-                        x_alt = X.get(1) * feetPerMeter;
+                        x_alt = X.get(1);
                         //strXAlt=Double.toString(x_alt)+" ft. "+altitudeLabel;
                         x_alt *= 10.0;
                         x_alt = Math.round(x_alt);
                         n_alt = (int) x_alt;
                         x_alt = n_alt / 10.0;
-                        strXAlt = Double.toString(x_alt) + " ft. " + altitudeLabel;
+                        strXAlt = createAltitudeLabel(x_alt, altitudeUnit, altitudeLabel);
                         tg.set_H1(strXAlt);
                     }
                     break;
@@ -600,30 +597,37 @@ public final class clsRenderer {
                             }
                         }
                     }
+
+                    maxWidthMeters *= distanceUnit.conversionFactor;
+                    maxWidthMeters *= 10.0;
+                    maxWidthMeters = Math.round(maxWidthMeters);
+                    int tempWidth = (int) maxWidthMeters;
+                    maxWidthMeters = tempWidth / 10.0;
+
                     //now set tg.H2 to the max value so that the H2 modifier will display as the max vaule;
-                    tg.set_H2(Double.toString(maxWidthMeters) + "m");
+                    tg.set_H2(Double.toString(maxWidthMeters) + " " + distanceUnit.label);
                     //use X, X1 to set tg.H, tg.H1
                     X = milStd.getModifiers_AM_AN_X(ModifiersTG.X_ALTITUDE_DEPTH);
                     if (X != null && X.size() > 0) {
                         //tg.set_H(Double.toString(X.get(0)));
-                        x_alt = X.get(0) * feetPerMeter;
+                        x_alt = X.get(0);
                         //strXAlt=Double.toString(x_alt)+" ft. "+altitudeLabel;
                         x_alt *= 10.0;
                         x_alt = Math.round(x_alt);
                         n_alt = (int) x_alt;
                         x_alt = n_alt / 10.0;
-                        strXAlt = Double.toString(x_alt) + " ft. " + altitudeLabel;
+                        strXAlt = createAltitudeLabel(x_alt, altitudeUnit, altitudeLabel);
                         tg.set_H(strXAlt);
                     }
                     if (X != null && X.size() > 1) {
                         //tg.set_H1(Double.toString(X.get(1)));
-                        x_alt = X.get(1) * feetPerMeter;
+                        x_alt = X.get(1);
                         //strXAlt=Double.toString(x_alt)+" ft. "+altitudeLabel;
                         x_alt *= 10.0;
                         x_alt = Math.round(x_alt);
                         n_alt = (int) x_alt;
                         x_alt = n_alt / 10.0;
-                        strXAlt = Double.toString(x_alt) + " ft. " + altitudeLabel;
+                        strXAlt = createAltitudeLabel(x_alt, altitudeUnit, altitudeLabel);
                         tg.set_H1(strXAlt);
                     }
                     break;
@@ -640,13 +644,13 @@ public final class clsRenderer {
                     if (X != null && !X.isEmpty()) {
                         //strH1 = Double.toString(X.get(0));
                         //tg.set_H1(strH1);
-                        x_alt = X.get(0) * feetPerMeter;
+                        x_alt = X.get(0);
                         //strXAlt=Double.toString(x_alt)+" ft. "+altitudeLabel;
                         x_alt *= 10.0;
                         x_alt = Math.round(x_alt);
                         n_alt = (int) x_alt;
                         x_alt = n_alt / 10.0;
-                        strXAlt = Double.toString(x_alt) + " ft. " + altitudeLabel;
+                        strXAlt = createAltitudeLabel(x_alt, altitudeUnit, altitudeLabel);
                         tg.set_H1(strXAlt);
                     }
                     break;
@@ -668,13 +672,13 @@ public final class clsRenderer {
 
                         if (X != null && j < X.size()) {
                             //strH1 += Double.toString(X.get(j));
-                            x_alt = X.get(j) * feetPerMeter;
+                            x_alt = X.get(j);
                             //strXAlt=Double.toString(x_alt)+" ft. "+altitudeLabel;
                             x_alt *= 10.0;
                             x_alt = Math.round(x_alt);
                             n_alt = (int) x_alt;
                             x_alt = n_alt / 10.0;
-                            strXAlt = Double.toString(x_alt) + " ft. " + altitudeLabel;
+                            strXAlt = createAltitudeLabel(x_alt, altitudeUnit, altitudeLabel);
                             strH1 += strXAlt;
                             if (j < X.size() - 1) {
                                 strH1 += ",";
@@ -817,6 +821,10 @@ public final class clsRenderer {
                     new RendererException("Failed to build multipoint TG for " + milStd.getSymbolID(), exc));
         }
         return tg;
+    }
+
+    private static String createAltitudeLabel(double distance, String altitudeUnit, String altitudeLabel){
+        return distance + " " + altitudeUnit + " " + altitudeLabel;
     }
 
     /**

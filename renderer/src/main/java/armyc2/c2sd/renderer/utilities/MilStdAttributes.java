@@ -95,7 +95,13 @@ public class MilStdAttributes {
      * DashArray from the Stroke object from the ShapeInfo object.
      */
     public static final int UseDashArray = 15;
-    
+
+    /**
+     * The mode that altitude labels will be displayed in, the default value is HAE.
+     *
+     * Unlike {@link #DistanceUnits} this attribute does no conversion, this is merely a label. The values
+     * must be converted properly before they are passed in as modifiers
+     */
     public static final int AltitudeMode = 16;
 
     /**
@@ -106,6 +112,23 @@ public class MilStdAttributes {
     public static final int UsePatternFill = 18;
 
     public static final int PatternFillType = 19;
+
+    /**
+     * The conversion factor and the label that you want all distances to display in. The conversion factor
+     * is converting from meters. The default unit is meters.<br><br>
+     *
+     * Must be in the form [conversionFactor],[label]. So for example converting to feet would be "3.28,ft."
+     * The helper class {@link DistanceUnit} can be used.
+     */
+    public static final int DistanceUnits = 20;
+
+    /**
+     * The units that you want to display altitude values in. The default value is feet.
+     *
+     * Unlike {@link #DistanceUnits} this attribute does no conversion, this is merely a label. The values
+     * must be converted properly before they are passed in as modifiers
+     */
+    public static final int AltitudeUnits = 21;
     
     public static ArrayList<Integer> GetModifierList()
     {
@@ -125,6 +148,8 @@ public class MilStdAttributes {
         list.add(DrawAsIcon);
         list.add(SymbologyStandard);
         list.add(HideOptionalLabels);
+        list.add(DistanceUnits);
+        list.add(AltitudeUnits);
         
         return list;
     }

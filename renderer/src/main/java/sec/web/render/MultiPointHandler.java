@@ -7,20 +7,13 @@ import android.util.SparseArray;
 import armyc2.c2sd.graphics2d.*;
 
 import java.util.Map;
+
+import armyc2.c2sd.renderer.utilities.*;
 import sec.geo.utilities.StringBuilder;
 import sec.web.render.utilities.JavaRendererUtilities;
 import sec.web.render.utilities.LineInfo;
 import sec.web.render.utilities.SymbolInfo;
 import sec.web.render.utilities.TextInfo;
-import armyc2.c2sd.renderer.utilities.IPointConversion;
-import armyc2.c2sd.renderer.utilities.MilStdAttributes;
-import armyc2.c2sd.renderer.utilities.MilStdSymbol;
-import armyc2.c2sd.renderer.utilities.ModifiersTG;
-import armyc2.c2sd.renderer.utilities.PointConversion;
-import armyc2.c2sd.renderer.utilities.RendererSettings;
-import armyc2.c2sd.renderer.utilities.ShapeInfo;
-import armyc2.c2sd.renderer.utilities.Color;
-import armyc2.c2sd.renderer.utilities.SymbolUtilities;
 import armyc2.c2sd.JavaLineArray.POINT2;
 import armyc2.c2sd.JavaLineArray.CELineArray;
 import armyc2.c2sd.JavaLineArray.TacticalLines;
@@ -30,17 +23,11 @@ import armyc2.c2sd.JavaRendererServer.RenderMultipoints.clsClipPolygon2;
 import armyc2.c2sd.JavaTacticalRenderer.mdlGeodesic;
 import java.util.LinkedList;
 import java.util.List;
-import armyc2.c2sd.renderer.utilities.SymbolDef;
-import armyc2.c2sd.renderer.utilities.SymbolDefTable;
-import armyc2.c2sd.renderer.utilities.ErrorLogger;
-import armyc2.c2sd.renderer.utilities.RendererException;
 import java.util.logging.Level;
-import armyc2.c2sd.renderer.MilStdIconRenderer;
 //import java.awt.font.TextAttribute;
 //import java.awt.font.NumericShaper;
 import android.graphics.Typeface;
-import armyc2.c2sd.renderer.utilities.RendererUtilities;
-import armyc2.c2sd.graphics2d.*;
+
 import sec.geo.GeoPoint;
 import sec.geo.kml.KmlOptions;
 import sec.geo.kml.XsltCoordinateWrapper;
@@ -1880,6 +1867,8 @@ public class MultiPointHandler {
         boolean usePatternFill = symbol.getUseFillPattern();
         int patternFillType = 0;
         boolean hideOptionalLabels = false;
+        DistanceUnit distanceUnit = null;
+        String altitudeUnit = null;
 
         String symbolFillIDs = null;
         String symbolFillIconSize = null;
@@ -2012,6 +2001,14 @@ public class MultiPointHandler {
                 if (saAttributes.indexOfKey(MilStdAttributes.HideOptionalLabels) >= 0) {
                     hideOptionalLabels = Boolean.parseBoolean(saAttributes.get(MilStdAttributes.HideOptionalLabels));
                 }
+
+                if(saAttributes.indexOfKey(MilStdAttributes.AltitudeUnits) >= 0) {
+                    altitudeUnit = saAttributes.get(MilStdAttributes.AltitudeUnits);
+                }
+
+                if(saAttributes.indexOfKey(MilStdAttributes.DistanceUnits) >= 0) {
+                    distanceUnit = DistanceUnit.parse(saAttributes.get(MilStdAttributes.DistanceUnits));
+                }
             }
 
             symbol.setModifierMap(modifiers);
@@ -2049,6 +2046,8 @@ public class MultiPointHandler {
             if(SymbolUtilities.isBasicShape(symbol.getSymbolID()))
                 symbol.setPatternFillType(patternFillType);
             symbol.setHideOptionalLabels(hideOptionalLabels);
+            symbol.setAltitudeUnit(altitudeUnit);
+            symbol.setDistanceUnit(distanceUnit);
 
             // Check grpahic modifiers variables.  If we set earlier, populate
             // the fields, otherwise, ignore.
