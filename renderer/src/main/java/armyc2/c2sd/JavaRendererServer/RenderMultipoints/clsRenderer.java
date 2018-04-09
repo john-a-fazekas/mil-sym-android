@@ -237,9 +237,9 @@ public final class clsRenderer {
             if (altitudeLabel == null || altitudeLabel.isEmpty()) {
                 altitudeLabel = "MSL";
             }
-            String altitudeUnit = milStd.getAltitudeUnit();
+            DistanceUnit altitudeUnit = milStd.getAltitudeUnit();
             if(altitudeUnit == null){
-                altitudeUnit = "ft.";
+                altitudeUnit = DistanceUnit.FEET;
             }
             DistanceUnit distanceUnit = milStd.getDistanceUnit();
             if(distanceUnit == null){
@@ -823,8 +823,15 @@ public final class clsRenderer {
         return tg;
     }
 
-    private static String createAltitudeLabel(double distance, String altitudeUnit, String altitudeLabel){
-        return distance + " " + altitudeUnit + " " + altitudeLabel;
+    private static String createAltitudeLabel(double distance, DistanceUnit altitudeUnit, String altitudeLabel){
+        // Truncate the result
+        double result = distance * altitudeUnit.conversionFactor;
+        result *= 10.0;
+        result = Math.round(result);
+        int tempResult = (int) result;
+        result = tempResult / 10.0;
+
+        return result + " " + altitudeUnit.label + " " + altitudeLabel;
     }
 
     /**

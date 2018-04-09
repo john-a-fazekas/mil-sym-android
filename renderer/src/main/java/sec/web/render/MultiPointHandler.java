@@ -1868,7 +1868,7 @@ public class MultiPointHandler {
         int patternFillType = 0;
         boolean hideOptionalLabels = false;
         DistanceUnit distanceUnit = null;
-        String altitudeUnit = null;
+        DistanceUnit altitudeUnit = null;
 
         String symbolFillIDs = null;
         String symbolFillIconSize = null;
@@ -2003,7 +2003,7 @@ public class MultiPointHandler {
                 }
 
                 if(saAttributes.indexOfKey(MilStdAttributes.AltitudeUnits) >= 0) {
-                    altitudeUnit = saAttributes.get(MilStdAttributes.AltitudeUnits);
+                    altitudeUnit = DistanceUnit.parse(saAttributes.get(MilStdAttributes.AltitudeUnits));
                 }
 
                 if(saAttributes.indexOfKey(MilStdAttributes.DistanceUnits) >= 0) {

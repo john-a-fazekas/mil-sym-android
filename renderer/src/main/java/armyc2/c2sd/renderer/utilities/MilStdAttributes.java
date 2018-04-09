@@ -99,8 +99,7 @@ public class MilStdAttributes {
     /**
      * The mode that altitude labels will be displayed in, the default value is HAE.
      *
-     * Unlike {@link #DistanceUnits} this attribute does no conversion, this is merely a label. The values
-     * must be converted properly before they are passed in as modifiers
+     * This value acts as a label, appending whatever string that is passed in to the end of the altitude units.
      */
     public static final int AltitudeMode = 16;
 
@@ -123,10 +122,11 @@ public class MilStdAttributes {
     public static final int DistanceUnits = 20;
 
     /**
-     * The units that you want to display altitude values in. The default value is feet.
+     * The conversion factor and the label that you want all distances to display in. The conversion factor
+     * is converting from meters. The default unit is meters.<br><br>
      *
-     * Unlike {@link #DistanceUnits} this attribute does no conversion, this is merely a label. The values
-     * must be converted properly before they are passed in as modifiers
+     * Must be in the form [conversionFactor],[label]. So for example converting to feet would be "3.28,ft."
+     * The helper class {@link DistanceUnit} can be used.
      */
     public static final int AltitudeUnits = 21;
     

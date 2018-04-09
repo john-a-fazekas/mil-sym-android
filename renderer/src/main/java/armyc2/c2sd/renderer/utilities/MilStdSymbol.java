@@ -79,7 +79,7 @@ public class MilStdSymbol
     
     private static String _AltitudeMode = "";
 
-    private static String _AltitudeUnit = null;
+    private static DistanceUnit _AltitudeUnit = null;
 
     private static DistanceUnit _DistanceUnit = null;
 
@@ -285,11 +285,11 @@ public class MilStdSymbol
         _AltitudeMode = value;
     }
 
-    public String getAltitudeUnit(){
+    public DistanceUnit getAltitudeUnit(){
         return _AltitudeUnit;
     }
 
-    public void setAltitudeUnit(String unit){
+    public void setAltitudeUnit(DistanceUnit unit){
         _AltitudeUnit = unit;
     }
 

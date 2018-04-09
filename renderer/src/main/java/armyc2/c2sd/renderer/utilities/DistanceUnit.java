@@ -5,6 +5,8 @@ import java.text.DecimalFormat;
 
 public class DistanceUnit
 {
+    private static final double FEET_PER_METER = 3.28084;
+
     public final double conversionFactor;
     public final String label;
 
@@ -32,4 +34,6 @@ public class DistanceUnit
     }
 
     public static DistanceUnit METERS = new DistanceUnit(1, "m.");
+
+    public static DistanceUnit FEET = new DistanceUnit(FEET_PER_METER, "ft.");
 }
